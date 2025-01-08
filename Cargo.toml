@@ -1,0 +1,83 @@
+[package]
+name = "sensors"
+version = "0.1.0"
+authors = ["Harshvardhan1809 <harrygarry2002@gmail.com>"]
+edition = "2021"
+resolver = "2"
+rust-version = "1.77"
+# build = "build.rs"
+
+[lib]
+harness = false
+
+# [[bin]]
+# name = "sensors"
+# harness = false # do not use the built in cargo test harness -> resolve rust-analyzer errors
+
+[profile.release]
+opt-level = "s"
+
+[profile.dev]
+debug = true    # Symbols are nice and they don't increase the size on Flash
+opt-level = "z"
+
+[features]
+# default = ["std", "binstart"]
+# std = ["alloc", "esp-idf-sys/std"]
+# alloc = []
+# nightly = []
+# wake-from-isr = [] # Only enable if you plan to use the `edge-executor` crate
+# embassy-sync = [] # For now, the dependecy on the `embassy-sync` crate is non-optional, but this might change in future
+# # Temporary, until (https://github.com/espressif/esp-idf/issues/13938) is addressed
+# # - When enabled, the code for the legacy ADC oneshot driver will be compiled;
+# # - When not enabled (default) the code for the new ADC oneshot driver will be compiled;
+# # - Since we don't wrap the legacy _continuous_ ADC driver, the new _continuous_ ADC driver is always compiled.
+# adc-oneshot-legacy = []
+# # Similar to adc-oneshot-legacy
+# # - When enabled (default), the code for the legacy RMT TX/RX driver will be compiled.
+# # - When disabled the code for the new onewire RMT driver will be compiled. 
+# # rmt-legacy = []
+# # Propagated esp-idf-sys features
+# native = ["esp-idf-sys/native"]
+# pio = ["esp-idf-sys/pio"]
+# alloc_handler = ["esp-idf-sys/alloc_handler"]
+# panic_handler = ["esp-idf-sys/panic_handler"]
+# binstart = ["esp-idf-sys/binstart"]
+# libstart = ["esp-idf-sys/libstart"]
+# experimental = ["esp-idf-svc/experimental"]
+
+
+# [[package.metadata.esp-idf-sys.extra_components]]
+# remote_component = { name = "onewire_bus", version = "^1.0.2" }
+
+# [patch.crates-io]
+# esp-idf-hal = { git = "https://github.com/esp-rs/esp-idf-hal" }
+# esp-idf-sys = { git = "https://github.com/esp-rs/esp-idf-sys", rev = "2728b85" }
+# cmake = { git = "https://github.com/ivmarkov/cmake-rs" }
+
+experimental = ["esp-idf-svc/experimental"]
+
+[patch.crates-io]
+esp-idf-hal = { git = "https://github.com/esp-rs/esp-idf-hal" }
+esp-idf-sys = { git = "https://github.com/esp-rs/esp-idf-sys", rev = "2728b85" }
+
+[dependencies]
+log = "0.4"
+esp-idf-svc = { version = "0.49", features = ["critical-section", "embassy-time-driver", "embassy-sync"] }
+nb = "1.1.0"
+mpu6050 = "0.1.6"
+nmea = "0.7.0"
+ina219 = "0.2.0"
+anyhow = "1.0.95"
+ds18b20 = "0.1.1"
+
+[build-dependencies]
+embuild = "0.32"
+cc = "=1.1.30" # Version "1.1.30" necessary until a new version of `esp-idf-sys` is released
+
+# [dev-dependencies]
+# anyhow = "1"
+# esp-idf-sys = { version = "0.35", features = ["binstart"] }
+# mipidsi = "0.5.0"
+# display-interface-spi = "0.4.1"
+# embedded-graphics = "0.7.1"
