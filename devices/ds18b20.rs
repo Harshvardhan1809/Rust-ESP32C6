@@ -1,6 +1,4 @@
-// use esp_idf_svc::hal::peripherals::Peripherals;
-// use ds18b20::Ds18b20;
-// use onewire::OneWire;
+// Reference: https://github.com/esp-rs/esp-idf-hal/blob/master/examples/rmt_onewire_temperature.rs
 
 use std::time::Duration;
 use esp_idf_svc::hal::onewire::{OWAddress, OWCommand, OWDriver};
@@ -71,7 +69,7 @@ fn ds18b20_send_command<'a>(addr: &OWAddress, bus: &OWDriver, cmd: u8) -> Result
 
 enum Ds18b20Command {
     ConvertTemp = 0x44,
-    // WriteScratch = 0x4E,
+    WriteScratch = 0x4E,
     ReadScratch = 0xBE,
 }
 

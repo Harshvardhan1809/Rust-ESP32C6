@@ -1,17 +1,15 @@
+// Reference: https://github.com/juliangaal/mpu6050
+// https://github.com/esp-rs/esp-idf-hal/blob/master/examples/i2c_ssd1306.rs
+
 use esp_idf_svc::hal::peripherals::Peripherals;
 use esp_idf_svc::hal::delay::{FreeRtos, Delay};
 use esp_idf_svc::hal::i2c::*;
 use esp_idf_svc::hal::prelude::*;
 use mpu6050::*;
 
-// -> anyhow::Result<()>
-// -> Result<(), Mpu6050Error<I2cError>>
 fn main() -> Result<(), ()> {
-    // It is necessary to call this function once. Otherwise some patches to the runtime
-    // implemented by esp-idf-sys might not link properly. See https://github.com/esp-rs/esp-idf-template/issues/71
     esp_idf_svc::sys::link_patches();
 
-    // Bind the log crate to the ESP Logging facilities
     esp_idf_svc::log::EspLogger::initialize_default();
 
     log::info!("MPU6050");

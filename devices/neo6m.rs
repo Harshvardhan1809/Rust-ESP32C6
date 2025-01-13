@@ -1,3 +1,5 @@
+// Reference: https://blog.theembeddedrustacean.com/esp32-embedded-rust-at-the-hal-uart-serial-communication
+
 use esp_idf_svc::hal::peripherals::Peripherals;
 use esp_idf_svc::hal::delay::{FreeRtos, Delay, BLOCK};
 use esp_idf_svc::hal::uart::*;

@@ -1,3 +1,6 @@
+// Reference: https://forum.arduino.cc/t/problem-esp32-ina219-not-connected/1190686
+// https://github.com/scttnlsn/ina219/blob/master/examples/minimal.rs
+
 use esp_idf_svc::hal::peripherals::Peripherals;
 use esp_idf_svc::hal::delay::{FreeRtos, Delay};
 use esp_idf_svc::hal::i2c::*;
