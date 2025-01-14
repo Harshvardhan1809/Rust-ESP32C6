@@ -4,7 +4,6 @@
 // ChatGPT
 
 use esp_idf_svc::hal::peripherals::Peripherals;
-use esp_idf_svc::hal::delay::FreeRtos;
 use esp_idf_svc::hal::uart::*;
 use esp_idf_svc::hal::gpio;
 use esp_idf_svc::hal::task::*;
@@ -26,7 +25,6 @@ fn main() {
 
     block_on(async {
         loop {        
-            FreeRtos::delay_ms(1000);
             let mut rec = Vec::new();
 
             // NMEA 0183 message is 82 ASCII characters long, 82 bytes

@@ -1,5 +1,5 @@
 ```
-cargo add
+cargo build
 cargo run --example mpu6050 --target riscv32imac-esp-espidf
 ```
 
