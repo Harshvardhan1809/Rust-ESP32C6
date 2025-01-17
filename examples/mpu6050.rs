@@ -15,8 +15,8 @@ fn main() -> Result<(), ()> {
 
     let peripherals = Peripherals::take().expect("Unable to access device peripheral");
     let i2c = peripherals.i2c0;
-    let sda = peripherals.pins.gpio5;
-    let scl = peripherals.pins.gpio6;
+    let sda = peripherals.pins.gpio6;
+    let scl = peripherals.pins.gpio7;
 
     let config = I2cConfig::new().baudrate(100.kHz().into());
     let i2c = I2cDriver::new(i2c, sda, scl, &config).expect("I2c Driver Error");
