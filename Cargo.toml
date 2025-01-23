@@ -30,6 +30,8 @@ mpu6050 = "0.1.6"
 ina219 = "0.2.0"
 anyhow = "1.0.95"
 ds18b20 = "0.1.1"
+one-wire-bus = "0.1.1"
+embedded-hal = { version = "0.2.7" }
 
 [build-dependencies]
 embuild = "0.32"

@@ -29,22 +29,18 @@ fn get_temperature<P, E>(
     where
     P: OutputPin<Error = E> + InputPin<Error = E>,
 {
-    // initiate a temperature measurement for all connected devices
-    ds18b20::start_simultaneous_temp_measurement(one_wire_bus, &mut Ets)?;
-
-    // wait until the measurement is done. This depends on the resolution you specified
-    // If you don't know the resolution, you can obtain it from reading the sensor data,
-    // or just wait the longest time, which is the 12-bit resolution (750ms)
-    Resolution::Bits12.delay_for_measurement_time(&mut FreeRtos);
-
-    // iterate over all the devices, and report their temperature
-    let mut search_state = None;
     loop {
-        if let Some((device_address, state)) = one_wire_bus.device_search(search_state.as_ref(), false, &mut Ets)? {
-            search_state = Some(state);
+        // initiate a temperature measurement for all connected devices
+        ds18b20::start_simultaneous_temp_measurement(one_wire_bus, &mut Ets)?;
+        // wait until the measurement is done. This depends on the resolution you specified
+        // If you don't know the resolution, you can obtain it from reading the sensor data,
+        // or just wait the longest time, which is the 12-bit resolution (750ms)
+        Resolution::Bits10.delay_for_measurement_time(&mut FreeRtos);
+
+        // iterate over all the devices, and report their temperature
+        if let Some((device_address, _)) = one_wire_bus.device_search(None, false, &mut Ets)? {
             if device_address.family_code() != ds18b20::FAMILY_CODE {
-                // skip other devices
-                continue;
+                continue; // skip other devices
             }
             // You will generally create the sensor once, and save it for later
             let sensor = Ds18b20::new(device_address)?;
@@ -52,7 +48,6 @@ fn get_temperature<P, E>(
             // contains the read temperature, as well as config info such as the resolution used
             let sensor_data = sensor.read_data(one_wire_bus, &mut Ets)?;
             println!("Device at {:?} is {}°C", device_address, sensor_data.temperature);
-            search_state = None;
         } else {
             break;
         }
