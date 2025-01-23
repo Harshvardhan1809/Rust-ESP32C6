@@ -1,102 +1,62 @@
 // Reference: https://github.com/esp-rs/esp-idf-hal/blob/master/examples/rmt_onewire_temperature.rs
+// https://github.com/zerom0/fearless-embedded-rust/blob/main/src/main.rs
+// https://crates.io/crates/one-wire-bus
+// https://crates.io/crates/ds18b20
 
-use std::time::Duration;
-use esp_idf_svc::hal::onewire::{OWAddress, OWCommand, OWDriver};
 use esp_idf_svc::hal::peripherals::Peripherals;
-use esp_idf_svc::sys::EspError;
-use esp_idf_svc::hal::delay::FreeRtos;
-use anyhow;
+use esp_idf_svc::hal::gpio::PinDriver; 
+use esp_idf_svc::hal::delay::{FreeRtos, Ets};
+use embedded_hal::digital::v2::{InputPin, OutputPin};
+use ds18b20::{Ds18b20, self, Resolution};
+use one_wire_bus::{self, OneWire, OneWireResult};
 
-fn main() -> anyhow::Result<()> {
+fn main() {
 
-    // It is necessary to call this function once. Otherwise some patches to the runtime
-    // implemented by esp-idf-sys might not link properly. See https://github.com/esp-rs/esp-idf-template/issues/71
     esp_idf_svc::sys::link_patches();
-
-    // Bind the log crate to the ESP Logging facilities
     esp_idf_svc::log::EspLogger::initialize_default();
-
+    
     log::info!("Temperature Sensor!");
-
     let peripherals = Peripherals::take().expect("Unable to access device peripheral");
-    let channel = peripherals.rmt.channel0;
-    let onewire_gpio_pin = peripherals.pins.gpio10;
+    let driver = PinDriver::input_output_od(peripherals.pins.gpio10).unwrap();
+    let mut one_wire_bus = OneWire::new(driver).unwrap();
+    
+    let _ = get_temperature(&mut one_wire_bus);
+}
 
-    log::info!("GPI011");
+fn get_temperature<P, E>(
+    one_wire_bus: &mut OneWire<P>,
+) -> OneWireResult<(), E>
+    where
+    P: OutputPin<Error = E> + InputPin<Error = E>,
+{
+    // initiate a temperature measurement for all connected devices
+    ds18b20::start_simultaneous_temp_measurement(one_wire_bus, &mut Ets)?;
 
-    let mut onewire_bus: OWDriver = OWDriver::new(onewire_gpio_pin, channel)?;
-    let device = {
-        let mut search = onewire_bus.search()?;
-        search.next()
-    };
+    // wait until the measurement is done. This depends on the resolution you specified
+    // If you don't know the resolution, you can obtain it from reading the sensor data,
+    // or just wait the longest time, which is the 12-bit resolution (750ms)
+    Resolution::Bits12.delay_for_measurement_time(&mut FreeRtos);
 
-    log::info!("Onewire Bus");
-
-    if device.is_none() {
-        println!("No device found");
-        return Ok(());
-    }
-
-    let device = device.unwrap();
-    if let Err(err) = device {
-        println!("An error occured searching for the device, err = {}", err);
-        return Err(err.into());
-    }
-    let device = device.unwrap();
-    println!(
-        "Found Device: {:?}, family code = {}",
-        device,
-        device.family_code()
-    );
-
+    // iterate over all the devices, and report their temperature
+    let mut search_state = None;
     loop {
-        ds18b20_trigger_temp_conversion(&device, &onewire_bus)?;
-        let temp = ds18b20_get_temperature(&device, &onewire_bus)?;
-        println!("Temperature: {}", temp);
-        FreeRtos::delay_ms(3000);
+        if let Some((device_address, state)) = one_wire_bus.device_search(search_state.as_ref(), false, &mut Ets)? {
+            search_state = Some(state);
+            if device_address.family_code() != ds18b20::FAMILY_CODE {
+                // skip other devices
+                continue;
+            }
+            // You will generally create the sensor once, and save it for later
+            let sensor = Ds18b20::new(device_address)?;
+
+            // contains the read temperature, as well as config info such as the resolution used
+            let sensor_data = sensor.read_data(one_wire_bus, &mut Ets)?;
+            println!("Device at {:?} is {}°C", device_address, sensor_data.temperature);
+            search_state = None;
+        } else {
+            break;
+        }
+        FreeRtos::delay_ms(1000);
     }
-}
-
-fn ds18b20_send_command<'a>(addr: &OWAddress, bus: &OWDriver, cmd: u8) -> Result<(), EspError> {
-    let mut buf = [0; 10];
-    buf[0] = OWCommand::MatchRom as _;
-    let addr = addr.address().to_le_bytes();
-    buf[1..9].copy_from_slice(&addr);
-    buf[9] = cmd;
-
-    bus.write(&buf)
-}
-
-enum Ds18b20Command {
-    ConvertTemp = 0x44,
-    WriteScratch = 0x4E,
-    ReadScratch = 0xBE,
-}
-
-fn ds18b20_trigger_temp_conversion<'a>(addr: &OWAddress, bus: &OWDriver) -> Result<(), EspError> {
-    // reset bus and check if the ds18b20 is present
-    bus.reset()?;
-
-    ds18b20_send_command(addr, bus, Ds18b20Command::ConvertTemp as u8)?;
-
-    // delay proper time for temp conversion,
-    // assume max resolution (12-bits)
-    std::thread::sleep(Duration::from_millis(800));
-
     Ok(())
-}
-
-fn ds18b20_get_temperature<'a>(addr: &OWAddress, bus: &OWDriver) -> Result<f32, EspError> {
-    bus.reset()?;
-
-    ds18b20_send_command(addr, bus, Ds18b20Command::ReadScratch as u8)?;
-
-    let mut buf = [0u8; 9];
-    bus.read(&mut buf)?;
-    let lsb = buf[0];
-    let msb = buf[1];
-
-    let temp_raw: u16 = (u16::from(msb) << 8) | u16::from(lsb);
-
-    Ok(f32::from(temp_raw) / 16.0)
 }
