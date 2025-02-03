@@ -32,6 +32,7 @@ anyhow = "1.0.95"
 ds18b20 = "0.1.1"
 one-wire-bus = "0.1.1"
 embedded-hal = { version = "0.2.7" }
+nmea-parser = "0.11.0"
 
 [build-dependencies]
 embuild = "0.32"
