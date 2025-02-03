@@ -8,6 +8,12 @@ rust-version = "1.77"
 
 [lib]
 harness = false
+name = "lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bin"
+path = "src/main.rs"
 
 [profile.release]
 opt-level = "s"
@@ -30,6 +36,7 @@ mpu6050 = "0.1.6"
 ina219 = "0.2.0"
 anyhow = "1.0.95"
 ds18b20 = "0.1.1"
+embedded-sdmmc = "0.8.1"
 one-wire-bus = "0.1.1"
 embedded-hal = { version = "0.2.7" }
 
