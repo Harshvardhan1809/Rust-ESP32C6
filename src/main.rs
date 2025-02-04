@@ -1,4 +1,4 @@
-mod sensors;
+use lib::run;
 
 fn main() -> Result() {
     // It is necessary to call this function once. Otherwise some patches to the runtime
@@ -9,8 +9,8 @@ fn main() -> Result() {
 
     log::info!("Started Cubesat operations");
 
-    sensors::initialize_sensors();
+    // sensors::initialize_sensors();
 
-    sensors::run_sensors();
+    run();
 
 }
