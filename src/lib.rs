@@ -1,19 +1,24 @@
-use esp_idf_svc::hal::peripherals::Peripherals;
-use esp_idf_svc::hal::gpio::PinDriver; 
-use esp_idf_svc::hal::gpio;
-use esp_idf_svc::hal::delay::{FreeRtos, Delay, Ets};
-use esp_idf_svc::hal::i2c::{I2cConfig, I2cDriver, I2c};
-use esp_idf_svc::hal::uart::*;
-use esp_idf_svc::hal::uart::{config as UARTConfig};
-use esp_idf_svc::hal::spi::*;
-use esp_idf_svc::hal::spi::{config::Config as SPIConfig, SpiDriver, config::MODE_3, SPI2};
-use esp_idf_svc::hal::task::*;
-use esp_idf_svc::hal::prelude::*;
-use esp_idf_svc::sys::EspError;
-use esp_idf_svc::io::asynch::Read;
-use shared_bus;
-// use embedded_hal::spi::{SpiBus, SpiDevice};
-use core::cell::RefCell;
+// use esp_idf_svc::hal::peripherals::Peripherals;
+// use esp_idf_svc::hal::gpio::PinDriver; 
+// use esp_idf_svc::hal::gpio;
+// use esp_idf_svc::hal::delay::{FreeRtos, Delay, Ets};
+// use esp_idf_svc::hal::i2c::{I2cConfig, I2cDriver, I2c};
+// use esp_idf_svc::hal::uart::*;
+// use esp_idf_svc::hal::uart::{config as UARTConfig};
+// use esp_idf_svc::hal::spi::*;
+// use esp_idf_svc::hal::spi::{config::Config as SPIConfig, SpiDriver, config::MODE_3, SPI2};
+// use esp_idf_svc::hal::task::*;
+// use esp_idf_svc::hal::prelude::*;
+// use esp_idf_svc::sys::EspError;
+// use esp_idf_svc::io::asynch::Read;
+// use shared_bus;
+// // use embedded_hal::spi::{SpiBus, SpiDevice};
+// use core::cell::RefCell;
+
+
+// This is not an appropriate attempt since we are using esp-rs which interferes at a compiler level
+
+use linux_embedded_hal::I2cdev;
 
 use one_wire_bus::{self, OneWire, OneWireResult};
 use mpu6050::{Mpu6050};
@@ -24,41 +29,43 @@ use nmea_parser::*;
 use embedded_sdmmc::{VolumeManager, FatVolume, SdCard};
 
 pub fn run(){
-    esp_idf_svc::sys::link_patches();
-    esp_idf_svc::log::EspLogger::initialize_default();
+    // esp_idf_svc::sys::link_patches();
+    // esp_idf_svc::log::EspLogger::initialize_default();
 
-    log::info!("Starting cubesat operations");
+    // log::info!("Starting cubesat operations");
 
-    let peripherals = Peripherals::take().expect("Unable to access device peripheral");
-    let i2c = peripherals.i2c0;
-    let sda = peripherals.pins.gpio6;
-    let scl = peripherals.pins.gpio7;
-    let config = I2cConfig::new().baudrate(100.kHz().into());
-    let i2c_driver = I2cDriver::new(i2c, sda, scl, &config).expect("I2c Driver Error");
-    let i2c_bus = shared_bus::BusManagerSimple::new(i2c_driver);
+    // let peripherals = Peripherals::take().expect("Unable to access device peripheral");
+    // let i2c = peripherals.i2c0;
+    // let sda = peripherals.pins.gpio6;
+    // let scl = peripherals.pins.gpio7;
+    // let config = I2cConfig::new().baudrate(100.kHz().into());
+    // let i2c_driver = I2cDriver::new(i2c, sda, scl, &config).expect("I2c Driver Error");
+    // let i2c_bus = shared_bus::BusManagerSimple::new(i2c_driver);
 
-    let pin_driver = PinDriver::input_output_od(peripherals.pins.gpio10).unwrap();
-    let mut one_wire_bus = OneWire::new(pin_driver).unwrap();
+    // let pin_driver = PinDriver::input_output_od(peripherals.pins.gpio10).unwrap();
+    // let mut one_wire_bus = OneWire::new(pin_driver).unwrap();
 
-    let rx = peripherals.pins.gpio17;
-    let tx = peripherals.pins.gpio16;
-    let uart_config = UARTConfig::Config::new().baudrate(Hertz(9600));
-    let mut uart = AsyncUartDriver::new(peripherals.uart1, tx, rx, Option::<gpio::Gpio0>::None, Option::<gpio::Gpio1>::None, &uart_config).unwrap();
+    // let rx = peripherals.pins.gpio17;
+    // let tx = peripherals.pins.gpio16;
+    // let uart_config = UARTConfig::Config::new().baudrate(Hertz(9600));
+    // let mut uart = AsyncUartDriver::new(peripherals.uart1, tx, rx, Option::<gpio::Gpio0>::None, Option::<gpio::Gpio1>::None, &uart_config).unwrap();
 
-    let spi = peripherals.spi2;
-    let sclk = peripherals.pins.gpio19;
-    let serial_in = peripherals.pins.gpio20; // SDI
-    let serial_out = peripherals.pins.gpio21; // SDO
-    let cs = peripherals.pins.gpio22;
+    // let spi = peripherals.spi2;
+    // let sclk = peripherals.pins.gpio19;
+    // let serial_in = peripherals.pins.gpio20; // SDI
+    // let serial_out = peripherals.pins.gpio21; // SDO
+    // let cs = peripherals.pins.gpio22;
 
-    let driver = SpiDriver::new::<SPI2>(spi,sclk,serial_out,Some(serial_in),&SpiDriverConfig::new()).unwrap();
-    let mut delay = Delay::new(10);
-    let spi_config = SPIConfig::new().baudrate(26.MHz().into()).data_mode(MODE_3);
-    let mut spi_device = SpiDeviceDriver::new(&driver, Some(cs), &spi_config).unwrap();
+    // let driver = SpiDriver::new::<SPI2>(spi,sclk,serial_out,Some(serial_in),&SpiDriverConfig::new()).unwrap();
+    // let mut delay = Delay::new(10);
+    // let spi_config = SPIConfig::new().baudrate(26.MHz().into()).data_mode(MODE_3);
+    // let mut spi_device = SpiDeviceDriver::new(&driver, Some(cs), &spi_config).unwrap();
 
-    let mut buf = [0_u8; 82];
-    let mut rec = Vec::new();
-    let mut parser = NmeaParser::new();
+    // let mut buf = [0_u8; 82];
+    // let mut rec = Vec::new();
+    // let mut parser = NmeaParser::new();
+
+    
 
     block_on(async {
         loop {      
@@ -85,11 +92,13 @@ pub fn run(){
 
             // Read values from current sensor
             {
+                // let opt = Opts::new(0x40,100 * physic::MilliOhm,1 * physic::Ampere);
+                // let mut ina = INA219::new(i2c_bus.acquire_i2c(), opt);
+                // ina.init().unwrap();
+                // let pm = ina.sense().unwrap();
+                // println!("{:?}",pm);
+
                 let opt = Opts::new(0x40,100 * physic::MilliOhm,1 * physic::Ampere);
-                let mut ina = INA219::new(i2c_bus.acquire_i2c(), opt);
-                ina.init().unwrap();
-                let pm = ina.sense().unwrap();
-                println!("{:?}",pm);
             }
 
             // Read values from gyroscope
